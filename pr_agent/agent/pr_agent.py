@@ -99,8 +99,14 @@ class PRAgent:
 
         action = action.lstrip("/").lower()
         if action not in command2class:
-            get_logger().warning(f"Unknown command: {action}")
-            return False
+            with get_logger().contextualize(command=action, pr_url=pr_url):
+                get_logger().info("PR-Agent request handler started", analytics=True)
+                if notify:
+                    notify()
+
+                await command2class["review"](pr_url, ai_handler=self.ai_handler, args=args).run()
+                await command2class["improve"](pr_url, ai_handler=self.ai_handler, args=args).run()
+            return True
         with get_logger().contextualize(command=action, pr_url=pr_url):
             get_logger().info("PR-Agent request handler started", analytics=True)
             if action == "answer":
